@@ -7,8 +7,8 @@
 
     <Grid x:Name="MainGrid" >
         <Grid.RowDefinitions>
-            <RowDefinition Height="4*" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="7*" />
+            <RowDefinition Height="3*" />
         </Grid.RowDefinitions>
 
 
@@ -17,90 +17,101 @@
                     Padding="30,0"
                     Spacing="25">
 
-                <HorizontalStackLayout HorizontalOptions="Center">
-                    <Entry
-                            x:Name="inputView"
-                            Placeholder="time..."
-                            Keyboard="Numeric"
-                            TextChanged="TimeChanged"
-                            TextColor="Black"
-                            BackgroundColor="LightGray"
-                            FontFamily="DotoExtraBold"
-                            FontSize="40"
-                            MaxLength="6"
-                            HorizontalTextAlignment="End"
-                            WidthRequest="300"
-                            Text="10"
-                            Margin="0,0,0,20" />
-                    <Label
-                            Text="seconds"
-                            FontSize="40"
-                            FontFamily="DotoExtraBold"
-                            Margin="30"
-                            VerticalTextAlignment="End"/>
-                </HorizontalStackLayout>
-
-                <Grid x:Name="SavedTimers" BackgroundColor="Black" MinimumHeightRequest="500" MinimumWidthRequest="500">
+                <Grid x:Name="SavedTimers" BackgroundColor="Black" HeightRequest="500" MinimumWidthRequest="500" HorizontalOptions="Center">
 
                 </Grid>
 
                 <VerticalStackLayout x:Name="timeLeftPanel">
-                    <Label x:Name="timeLeftLabel"
+                    <Border Stroke="White"
+                            StrokeThickness="3"
+                            StrokeDashArray="9,1"
+                            StrokeDashOffset="1"
+                            StrokeShape="RoundRectangle 10">
+                        <Label x:Name="timeLeftLabel"
                               Text="xxx Left"
                               FontSize="40"
                               Padding="10"
                               FontFamily="DotoExtraBold"
                               HorizontalOptions="Center"
                               VerticalOptions="Center"
-                              TextColor="Black"
-                              BackgroundColor="LightGray"
                               WidthRequest="300"
                               MinimumHeightRequest="100" />
+                    </Border>
 
-                    <Grid x:Name="RotatingBox" BackgroundColor="Pink" HeightRequest="200" WidthRequest="200" HorizontalOptions="Center" VerticalOptions="Center">
-                        <skia:SKCanvasView x:Name="canvasView" PaintSurface="OnCanvasViewPaintSurface" />
-                    </Grid>
-
-                    <VerticalStackLayout x:Name="skiaBox" MinimumHeightRequest="200" WidthRequest="200" HorizontalOptions="Center" Background="AliceBlue"/>
-
-
+                    <skia:SKCanvasView x:Name="canvasView" PaintSurface="OnCanvasViewPaintSurface" BackgroundColor="Pink" HorizontalOptions="Center" VerticalOptions="Center"/>
                 </VerticalStackLayout>
-                    
-
             </VerticalStackLayout>
         </ScrollView>
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="50" HorizontalOptions="CenterAndExpand" VerticalOptions="Center" Margin="10">
-            <Button
-            x:Name="stopButton"
-            Text="Stop"
-            Clicked="StopTimer"
-            FontSize="40"
-            FontFamily="DotoExtraBold"
-            BackgroundColor="LightGray"
-            TextColor="Black"
-            HorizontalOptions="Center" />
+        <VerticalStackLayout Grid.Row="1">
 
-            <Button
-            x:Name="startButton"
-            Text="Start"
-            Clicked="StartTimer"
-            FontSize="40"
-            FontFamily="DotoExtraBold"
-            BackgroundColor="LightGray"
-            TextColor="Black"
-            HorizontalOptions="Center" />
+            <HorizontalStackLayout HorizontalOptions="Center" Margin="10,0,10,0">
+                <Border
+                    Stroke="Transparent"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 10"
+                    Padding="0">
 
-            <Button
-            x:Name="resetButton"
-            Text="Reset"
-            Clicked="ResetTimer"
-            FontSize="40"
-            FontFamily="DotoExtraBold"
-            BackgroundColor="LightGray"
-            TextColor="Black"
-            HorizontalOptions="Center" />
-        </HorizontalStackLayout>
+                    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+                        <Entry
+                            VerticalOptions="Center"
+                            x:Name="inputView"
+                            Placeholder="time..."
+                            Keyboard="Numeric"
+                            TextChanged="TimeChanged"
+                            FontFamily="DotoExtraBold"
+                            FontSize="40"
+                            MaxLength="5"
+                            HorizontalTextAlignment="End"
+                            WidthRequest="150"
+                            Text="10"
+                            Margin="0,0,0,20" />
+                    </Grid>
+                </Border>
+
+
+                <Label
+                    Text="seconds"
+                    FontSize="40"
+                    FontFamily="DotoExtraBold"
+                    Margin="30"
+                    VerticalTextAlignment="End"/>
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="30" HorizontalOptions="CenterAndExpand" VerticalOptions="Center" Margin="10">
+                <Button
+                    x:Name="stopButton"
+                    Text="Stop"
+                    Clicked="StopTimer"
+                    FontSize="40"
+                    WidthRequest="160"
+                    FontFamily="DotoExtraBold"
+                    BackgroundColor="LightGray"
+                    TextColor="Black"
+                    HorizontalOptions="Center" />
+
+                <Button
+                    x:Name="startButton"
+                    Text="Start"
+                    Clicked="StartTimer"
+                    FontSize="40"
+                    FontFamily="DotoExtraBold"
+                    BackgroundColor="LightGray"
+                    TextColor="Black"
+                    HorizontalOptions="Center" />
+
+                <Button
+                    x:Name="resetButton"
+                    Text="Reset"
+                    Clicked="ResetTimer"
+                    FontSize="40"
+                    FontFamily="DotoExtraBold"
+                    BackgroundColor="LightGray"
+                    TextColor="Black"
+                    HorizontalOptions="Center" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
 
     </Grid>
 

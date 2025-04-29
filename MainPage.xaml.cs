@@ -22,7 +22,7 @@ namespace Klepsydra
         private void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
         {
             var canvas = e.Surface.Canvas;
-            canvas.Clear(SKColors.White);
+            canvas.Clear(SKColors.Transparent);
             hourglass.Draw(canvas, e.Info);
         }
 
@@ -66,7 +66,7 @@ namespace Klepsydra
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                RotatingBox.Rotation = angle;
+                canvasView.Rotation = angle;
             });
         }
 
