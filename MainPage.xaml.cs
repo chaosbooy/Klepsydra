@@ -37,6 +37,10 @@ namespace Klepsydra
         #region Rotation
 
         private double _lastAngle = 0;
+        private double _rotationAngle = 180;
+        private double _angleThreshold = 5;
+
+        private bool _startedByButton = false;
 
         private void StartAccelerometer()
         {
@@ -47,19 +51,32 @@ namespace Klepsydra
             }
         }
 
-        private void OnAccelerometerReadingChanged(object? sender, AccelerometerChangedEventArgs e)
+        private void RotationTimer(AccelerometerChangedEventArgs e)
+        {
+
+        } 
+
+        private void ButtonTimer(AccelerometerChangedEventArgs e)
         {
             var data = e.Reading;
 
             // When Z is close to ±1, phone is lying flat — ignore these cases
             if (Math.Abs(data.Acceleration.Z) > 0.85)
+            {
+                if (timer.IsRunning)
+                    StopTimer(null, null);
                 return;
+            }
+            else if (!timer.IsRunning)
+            {
+                StopTimer(null, null);
+            }
 
             // Compute angle in degrees from X and Y
             double angle = -Math.Atan2(data.Acceleration.Y, data.Acceleration.X) * (180 / Math.PI) + 90;
 
             // Smooth and reduce twitching: only update if angle changes significantly
-            if (Math.Abs(angle - _lastAngle) < 5) // 5 degrees threshold
+            if (Math.Abs(angle - _lastAngle) < _angleThreshold) // 5 degrees threshold
                 return;
 
             _lastAngle = angle;
@@ -68,6 +85,12 @@ namespace Klepsydra
             {
                 canvasView.Rotation = angle;
             });
+        }
+
+        private void OnAccelerometerReadingChanged(object? sender, AccelerometerChangedEventArgs e)
+        {
+            if (!_startedByButton) RotationTimer(e); 
+            else ButtonTimer(e);
         }
 
         protected override void OnDisappearing()
@@ -129,11 +152,9 @@ namespace Klepsydra
 
             //Skia Part
 
-            
-
         }
 
-        private void StopTimer(object sender, EventArgs e)
+        private void StopTimer(object ?sender, EventArgs ?e)
         {
 
             if(timer.IsRunning)

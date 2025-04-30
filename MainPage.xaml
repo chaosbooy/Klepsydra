@@ -78,7 +78,7 @@
                     VerticalTextAlignment="End"/>
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout Spacing="30" HorizontalOptions="CenterAndExpand" VerticalOptions="Center" Margin="10">
+            <HorizontalStackLayout x:Name="Buttons" Spacing="30" HorizontalOptions="CenterAndExpand" VerticalOptions="Center" Margin="10">
                 <Button
                     x:Name="stopButton"
                     Text="Stop"
