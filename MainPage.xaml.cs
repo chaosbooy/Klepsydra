@@ -1,11 +1,14 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using Klepsydra.Resources.Scripts;
+using Plugin.Maui.Audio;
 
 namespace Klepsydra
 {
     public partial class MainPage : ContentPage
     {
+        private readonly IAudioManager audioManager;
+
         public MainPage()
         {
             InitializeComponent();
@@ -13,6 +16,8 @@ namespace Klepsydra
             StartAccelerometer();
             SetupTimer();
             hourglass = new Hourglass();
+
+            audioManager = AudioManager.Current;
         }
 
         #region Skia UI
@@ -142,6 +147,7 @@ namespace Klepsydra
             EnableButton(resetButton);
             EnableButton(stopButton);
             DisableButton(startButton);
+            inputView.IsEnabled = false;
 
             timeLeftPanel.IsVisible = true;
             SavedTimers.IsVisible = false;
@@ -149,9 +155,6 @@ namespace Klepsydra
             seconds = int.Parse(inputView.Text);
             timeLeftLabel.Text = $"{seconds} seconds left";
             timer.Start();
-
-            //Skia Part
-
         }
 
         private void StopTimer(object ?sender, EventArgs ?e)
@@ -174,6 +177,7 @@ namespace Klepsydra
             EnableButton(startButton);
             DisableButton(resetButton);
             DisableButton(stopButton);
+            inputView.IsEnabled = true; 
 
             timeLeftPanel.IsVisible = false;
             SavedTimers.IsVisible = true;
@@ -206,12 +210,24 @@ namespace Klepsydra
 
                 timeLeftLabel.Text = $"0 seconds left";
                 StopTimer(stopButton, new EventArgs());
+
+                Music();
             }
             else
             {
                 timeLeftLabel.Text = $"{Math.Ceiling(seconds)} seconds left";
             }
         }
+
+        async Task Music()
+        {
+            using Stream track = await FileSystem.OpenAppPackageFileAsync("Sound.wav");
+            IAudioPlayer player = audioManager.CreatePlayer(track);
+            player.Loop = true;
+            player.Volume = 1.0;
+            player.Play();
+        }
+
 
         #endregion
     }

@@ -38,7 +38,7 @@
                               MinimumHeightRequest="100" />
                     </Border>
 
-                    <skia:SKCanvasView x:Name="canvasView" PaintSurface="OnCanvasViewPaintSurface" BackgroundColor="Pink" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    <skia:SKCanvasView x:Name="canvasView" PaintSurface="OnCanvasViewPaintSurface" BackgroundColor="Pink" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="170" HeightRequest="330"/>
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>

@@ -9,16 +9,56 @@ namespace Klepsydra.Resources.Scripts
         private readonly int totalParticles;
         private readonly int particleSize;
         private readonly float hourglassWidth;
-        private readonly float topY = 100;
-        private readonly float bottomY = 700;
-        private readonly float centerY = 400;
+        private readonly float hourglassHeight;
+        private readonly float topOffset;
+        private readonly float leftOffset;
 
-        public Hourglass(int particleCount = 100, int particleSize = 5, float hourglassWidth = 160)
+        private SKPoint[] hourglassBase;
+        private readonly SKPaint[] sandPaints =
+        {
+            new SKPaint
+            {
+                Color = SKColors.Blue,
+                IsAntialias = true
+            },
+            new SKPaint
+            {
+                Color = SKColors.Turquoise,
+                IsAntialias = true
+            },
+            new SKPaint
+            {
+                Color = SKColors.Purple,
+                IsAntialias = true
+            },
+            new SKPaint
+            {
+                Color = SKColors.LightBlue,
+                IsAntialias = true
+            }
+        };
+
+        public Hourglass(int particleCount = 300, int particleSize = 6, float hourglassWidth = 160, float hourglassHeight = 320)
         {
             this.totalParticles = particleCount;
             this.particleSize = particleSize;
             this.hourglassWidth = hourglassWidth;
+            this.hourglassHeight = hourglassHeight;
+            topOffset = 5;
+            leftOffset = 5;
             InitializeParticles();
+            InitializeHourglass();
+        }
+
+        private void InitializeHourglass() 
+        {
+            hourglassBase = new SKPoint[] {
+                new SKPoint (leftOffset, topOffset),
+                new SKPoint (leftOffset + hourglassWidth, topOffset),
+                new SKPoint (leftOffset, topOffset + hourglassHeight),
+                new SKPoint (leftOffset + hourglassWidth, topOffset + hourglassHeight),
+                new SKPoint (leftOffset, topOffset)
+            };
         }
 
         private void InitializeParticles()
@@ -28,12 +68,12 @@ namespace Klepsydra.Resources.Scripts
 
             for (int i = 0; i < totalParticles; i++)
             {
-                float y = topY + (float)(rnd.NextDouble() * (centerY - topY));
-                float progress = (y - topY) / (centerY - topY);
+                float y = topOffset + (float)rnd.Next((int)hourglassHeight / 2);
+                float progress = (y - topOffset) / (hourglassHeight / 2);
                 float xRange = (1 - progress) * (hourglassWidth / 2);
-                float x = 200 + (float)(rnd.NextDouble() * xRange * 2 - xRange);
+                float x = leftOffset + progress * hourglassWidth / 2 + (float)rnd.Next((int)xRange * 2) ;
 
-                particles.Add(new Particle { X = x, Y = y, IsFallen = false });
+                particles.Add(new Particle { X = x, Y = y, IsFalling = false });
             }
         }
 
@@ -41,15 +81,13 @@ namespace Klepsydra.Resources.Scripts
         {
             if (fallenCount < totalParticles)
             {
-                particles[fallenCount].IsFallen = true;
+                particles[fallenCount].IsFalling = true;
                 fallenCount++;
             }
         }
 
         public void Draw(SKCanvas canvas, SKImageInfo info)
         {
-            float centerX = info.Width / 2;
-
             // Draw outline
             using var outlinePaint = new SKPaint
             {
@@ -58,45 +96,49 @@ namespace Klepsydra.Resources.Scripts
                 IsStroke = true
             };
 
-            canvas.DrawLine(centerX - hourglassWidth / 2, topY, centerX + hourglassWidth / 2, topY, outlinePaint);
-            canvas.DrawLine(centerX - hourglassWidth / 2, topY, centerX, centerY, outlinePaint);
-            canvas.DrawLine(centerX + hourglassWidth / 2, topY, centerX, centerY, outlinePaint);
-            canvas.DrawLine(centerX - hourglassWidth / 2, bottomY, centerX + hourglassWidth / 2, bottomY, outlinePaint);
-            canvas.DrawLine(centerX - hourglassWidth / 2, bottomY, centerX, centerY, outlinePaint);
-            canvas.DrawLine(centerX + hourglassWidth / 2, bottomY, centerX, centerY, outlinePaint);
-
-            // Draw particles
-            using var particlePaint = new SKPaint
+            using var woodPaint = new SKPaint
             {
-                Color = SKColors.Goldenrod,
-                IsAntialias = true
+                Color = SKColors.Black,
+                StrokeWidth = 6,
+                IsStroke = true
             };
 
+            // Draw particles
+
             int stacked = 0;
+            Random rnd = new Random();
+
+            float halfHeight = hourglassHeight / 2;
+
             foreach (var p in particles)
             {
-                float x = p.X;
-                float y = p.Y;
-
-                if (p.IsFallen)
+                if (p.IsFalling)
                 {
-                    int row = stacked / 10;
-                    int col = stacked % 10;
-                    float spacing = particleSize + 1;
-                    x = centerX - 45 + col * spacing;
-                    y = bottomY - spacing - row * spacing;
-                    stacked++;
+
+                    p.Y = halfHeight + topOffset + (float)rnd.Next((int)halfHeight);
+                    float progress = (p.Y - topOffset - halfHeight) / halfHeight;
+                    float xRange = progress * (hourglassWidth / 2);
+                    p.X = leftOffset + progress * hourglassWidth / 2 + (float)rnd.Next((int)xRange * 2);
+
+                    p.IsFalling = false;
                 }
 
-                canvas.DrawRect(x - particleSize / 2, y - particleSize / 2, particleSize, particleSize, particlePaint);
+                canvas.DrawRect(p.X - particleSize / 2, p.Y - particleSize / 2, particleSize, particleSize, sandPaints[rnd.Next(sandPaints.Length)]);
             }
+
+
+
+            canvas.DrawPoints(SKPointMode.Polygon, hourglassBase, outlinePaint);
+
+            canvas.DrawLine(new SKPoint(0, topOffset), new SKPoint(info.Width, topOffset), woodPaint);
+            canvas.DrawLine(new SKPoint(0, topOffset + hourglassHeight), new SKPoint(info.Width, topOffset + hourglassHeight), woodPaint);
         }
 
         private class Particle
         {
             public float X { get; set; }
             public float Y { get; set; }
-            public bool IsFallen { get; set; }
+            public bool IsFalling { get; set; }
         }
     }
 }

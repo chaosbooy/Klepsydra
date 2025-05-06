@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Plugin.Maui.Audio;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace Klepsydra
@@ -24,6 +25,7 @@ namespace Klepsydra
 
 #if DEBUG
     		builder.Logging.AddDebug();
+            builder.Services.AddSingleton(AudioManager.Current);
 #endif
 
             return builder.Build();
