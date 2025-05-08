@@ -1,118 +1,137 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Klepsydra.MainPage"
+             x:Class="Klepsydra.MainPage" 
              SizeChanged="ContentPageSizeChanged"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls">
 
-    <Grid x:Name="MainGrid" >
+    <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="7*" />
             <RowDefinition Height="3*" />
         </Grid.RowDefinitions>
 
+        <skia:SKCanvasView x:Name="StartingClock"
+                            PaintSurface="OnCanvasViewPaintSurface"
+                           Grid.Row="0"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"/>
 
-        <ScrollView Grid.Row="0">
-            <VerticalStackLayout
-                    Padding="30,0"
-                    Spacing="25">
+        <VerticalStackLayout x:Name="timeLeftPanel"
+                     Grid.Row="0"
+                     HorizontalOptions="Fill"
+                     VerticalOptions="Fill">
 
-                <Grid x:Name="SavedTimers" BackgroundColor="Black" HeightRequest="500" MinimumWidthRequest="500" HorizontalOptions="Center">
+            <Border Stroke="White"
+                    StrokeThickness="3"
+                    StrokeDashArray="9,1"
+                    StrokeDashOffset="1"
+                    StrokeShape="RoundRectangle 10">
 
-                </Grid>
-
-                <VerticalStackLayout x:Name="timeLeftPanel">
-                    <Border Stroke="White"
-                            StrokeThickness="3"
-                            StrokeDashArray="9,1"
-                            StrokeDashOffset="1"
-                            StrokeShape="RoundRectangle 10">
-                        <Label x:Name="timeLeftLabel"
-                              Text="xxx Left"
-                              FontSize="40"
-                              Padding="10"
-                              FontFamily="DotoExtraBold"
-                              HorizontalOptions="Center"
-                              VerticalOptions="Center"
-                              WidthRequest="300"
-                              MinimumHeightRequest="100" />
-                    </Border>
-
-                    <skia:SKCanvasView x:Name="canvasView" PaintSurface="OnCanvasViewPaintSurface" BackgroundColor="Pink" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="170" HeightRequest="330"/>
-                </VerticalStackLayout>
-            </VerticalStackLayout>
-        </ScrollView>
-
-        <VerticalStackLayout Grid.Row="1">
-
-            <HorizontalStackLayout HorizontalOptions="Center" Margin="10,0,10,0">
-                <Border
-                    Stroke="Transparent"
-                    StrokeThickness="2"
-                    StrokeShape="RoundRectangle 10"
-                    Padding="0">
-
-                    <Grid HorizontalOptions="Center" VerticalOptions="Center">
-                        <Entry
-                            VerticalOptions="Center"
-                            x:Name="inputView"
-                            Placeholder="time..."
-                            Keyboard="Numeric"
-                            TextChanged="TimeChanged"
-                            FontFamily="DotoExtraBold"
-                            FontSize="40"
-                            MaxLength="5"
-                            HorizontalTextAlignment="End"
-                            WidthRequest="150"
-                            Text="10"
-                            Margin="0,0,0,20" />
-                    </Grid>
-                </Border>
+                <Label x:Name="timeLeftLabel"
+                        Text="xxx Left"
+                        FontSize="40"
+                        Padding="10"
+                        FontFamily="DotoExtraBold"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        WidthRequest="300"
+                        MinimumHeightRequest="100" />
+            </Border>
 
 
-                <Label
-                    Text="seconds"
-                    FontSize="40"
-                    FontFamily="DotoExtraBold"
-                    Margin="30"
-                    VerticalTextAlignment="End"/>
-            </HorizontalStackLayout>
-
-            <HorizontalStackLayout x:Name="Buttons" Spacing="30" HorizontalOptions="CenterAndExpand" VerticalOptions="Center" Margin="10">
-                <Button
-                    x:Name="stopButton"
-                    Text="Stop"
-                    Clicked="StopTimer"
-                    FontSize="40"
-                    WidthRequest="160"
-                    FontFamily="DotoExtraBold"
-                    BackgroundColor="LightGray"
-                    TextColor="Black"
-                    HorizontalOptions="Center" />
-
-                <Button
-                    x:Name="startButton"
-                    Text="Start"
-                    Clicked="StartTimer"
-                    FontSize="40"
-                    FontFamily="DotoExtraBold"
-                    BackgroundColor="LightGray"
-                    TextColor="Black"
-                    HorizontalOptions="Center" />
-
-                <Button
-                    x:Name="resetButton"
-                    Text="Reset"
-                    Clicked="ResetTimer"
-                    FontSize="40"
-                    FontFamily="DotoExtraBold"
-                    BackgroundColor="LightGray"
-                    TextColor="Black"
-                    HorizontalOptions="Center" />
-            </HorizontalStackLayout>
+            <skia:SKCanvasView x:Name="RotatingClock"
+                   PaintSurface="OnCanvasViewPaintSurface"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   MinimumHeightRequest="300"/>
 
         </VerticalStackLayout>
 
-    </Grid>
+        <VerticalStackLayout Grid.Row="1" x:Name="inputHolder">
+            <HorizontalStackLayout HorizontalOptions="Center" Margin="10,0,10,0">
+                <Border Stroke="Transparent"
+                        StrokeThickness="2"
+                        StrokeShape="RoundRectangle 10"
+                        Padding="0">
 
+                    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+                        <Entry x:Name="inputView"
+                               Placeholder="time..."
+                               Keyboard="Numeric"
+                               TextChanged="InputChanged"
+                               FontFamily="DotoExtraBold"
+                               FontSize="40"
+                               MaxLength="5"
+                               HorizontalTextAlignment="End"
+                               WidthRequest="150"
+                               Text="10"
+                               Margin="0,0,0,20" />
+                    </Grid>
+                </Border>
+
+                <Label Text="seconds"
+                       FontSize="40"
+                       FontFamily="DotoExtraBold"
+                       Margin="30"
+                       VerticalTextAlignment="End"/>
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout x:Name="Buttons"
+                                   Spacing="30"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Margin="10">
+                <Button x:Name="stopButton"
+                        Text="Stop"
+                        Clicked="StopTimer"
+                        FontSize="40"
+                        WidthRequest="160"
+                        FontFamily="DotoExtraBold"
+                        BackgroundColor="LightGray"
+                        TextColor="Black"
+                        HorizontalOptions="Center" />
+
+                <Button x:Name="startButton"
+                        Text="Start"
+                        Clicked="StartTimer"
+                        FontSize="40"
+                        FontFamily="DotoExtraBold"
+                        BackgroundColor="LightGray"
+                        TextColor="Black"
+                        HorizontalOptions="Center" />
+
+                <Button x:Name="resetButton"
+                        Text="Reset"
+                        Clicked="ResetTimer"
+                        FontSize="40"
+                        FontFamily="DotoExtraBold"
+                        BackgroundColor="LightGray"
+                        TextColor="Black"
+                        HorizontalOptions="Center" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <Button Grid.Row="1"
+                x:Name="endButton"
+                Text="Finished"
+                FontSize="40"
+                IsVisible="False"
+                FontFamily="DotoExtraBold"
+                BackgroundColor="Green"
+                TextColor="White"
+                Clicked="ResetTimer"
+                Margin="0,20,0,0" />
+
+        <Button Grid.Row="1"
+                x:Name="cancelButton"
+                Text="Cancel"
+                FontSize="40"
+                IsVisible="False"
+                FontFamily="DotoExtraBold"
+                BackgroundColor="LightGray"
+                TextColor="Black"
+                Margin="0,20,0,0"
+                Clicked="ResetTimer"/>
+    </Grid>
 </ContentPage>

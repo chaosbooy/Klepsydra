@@ -25,7 +25,6 @@ namespace Klepsydra
 
 #if DEBUG
     		builder.Logging.AddDebug();
-            builder.Services.AddSingleton(AudioManager.Current);
 #endif
 
             return builder.Build();

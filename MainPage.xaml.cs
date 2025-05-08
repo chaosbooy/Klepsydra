@@ -7,45 +7,67 @@ namespace Klepsydra
 {
     public partial class MainPage : ContentPage
     {
-        private readonly IAudioManager audioManager;
+        Hourglass hourglass;
+        IDispatcherTimer timer;
+        double seconds = 10;
+        double waitingTime = 10;
+        private IAudioPlayer player;
 
         public MainPage()
         {
             InitializeComponent();
-
-            StartAccelerometer();
-            SetupTimer();
             hourglass = new Hourglass();
+            SetupTimer();
 
-            audioManager = AudioManager.Current;
+            InitializeAudio();
+            StartAccelerometer();
         }
-
-        #region Skia UI
-
-        private Hourglass hourglass;
 
         private void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
         {
             var canvas = e.Surface.Canvas;
             canvas.Clear(SKColors.Transparent);
-            hourglass.Draw(canvas, e.Info);
+
+            var info = e.Info;
+            float width = info.Width;
+            float height = info.Height;
+
+            // Save the canvas state
+            canvas.Save();
+
+            // Center the canvas
+            canvas.Translate(width / 2f, height / 2f);
+
+            // Optional: apply rotation if needed (e.g., to simulate hourglass flip)
+            // canvas.RotateDegrees(180);
+
+            // Scale hourglass to fit in view, preserving aspect ratio
+            float scale = Math.Min(width / 200f, height / 400f); // 200x400 is hourglass base size
+            canvas.Scale(scale);
+
+            // Move origin back to top-left of where hourglass should draw
+            canvas.Translate(-100, -200); // Half of base hourglass width/height
+
+            // Draw hourglass
+            hourglass.Draw(canvas, info);
+
+            canvas.Restore();
         }
 
-        private void OnTimePassed()
+
+        private async void InitializeAudio()
         {
-            hourglass.TimePassed();
-            canvasView.InvalidateSurface();
+            var audio = AudioManager.Current;
+            player = audio.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("Sound.wav"));
         }
 
-        #endregion
-
-        #region Rotation
+        #region Accelerometer
 
         private double _lastAngle = 0;
-        private double _rotationAngle = 180;
+        private double _rotation = 0;
         private double _angleThreshold = 5;
 
-        private bool _startedByButton = false;
+        bool _startedByButton = false;
 
         private void StartAccelerometer()
         {
@@ -56,26 +78,58 @@ namespace Klepsydra
             }
         }
 
+        private void OnAccelerometerReadingChanged(object? sender, AccelerometerChangedEventArgs e)
+        {
+            _rotation = e.Reading.Acceleration.Y;
+
+            if (!_startedByButton) RotationTimer(e);
+            else ButtonTimer(e);
+        }
+
         private void RotationTimer(AccelerometerChangedEventArgs e)
         {
+            var data = e.Reading;
 
-        } 
+            if (data.Acceleration.Y < -0.8)
+            {
+                if (timer.IsRunning) return;
+
+                timer.Start();
+                cancelButton.IsVisible = false;
+                inputHolder.IsVisible = false;
+                MainGrid.RotateTo(180, 5, Easing.Default);
+            }
+            else if (data.Acceleration.Y > 0.8)
+            {
+                if (player.IsPlaying)
+                {
+                    ResetTimer(null, null);
+                    return;
+                }
+
+                if (!timer.IsRunning) return;
+
+                timer.Stop();
+                cancelButton.IsVisible = true;
+                MainGrid.RotateTo(0, 5, Easing.Default);
+            }
+        }
 
         private void ButtonTimer(AccelerometerChangedEventArgs e)
         {
             var data = e.Reading;
 
-            // When Z is close to ±1, phone is lying flat — ignore these cases
-            if (Math.Abs(data.Acceleration.Z) > 0.85)
-            {
-                if (timer.IsRunning)
-                    StopTimer(null, null);
-                return;
-            }
-            else if (!timer.IsRunning)
-            {
-                StopTimer(null, null);
-            }
+            //// When Z is close to ±1, phone is lying flat — ignore these cases
+            //if (Math.Abs(data.Acceleration.Z) > 0.97)
+            //{
+            //    if (timer.IsRunning)
+            //        StopTimer(null, null);
+            //    return;
+            //}
+            //else if (!timer.IsRunning)
+            //{
+            //    StopTimer(null, null);
+            //}
 
             // Compute angle in degrees from X and Y
             double angle = -Math.Atan2(data.Acceleration.Y, data.Acceleration.X) * (180 / Math.PI) + 90;
@@ -88,79 +142,97 @@ namespace Klepsydra
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                canvasView.Rotation = angle;
+                RotatingClock.Rotation = angle;
             });
-        }
-
-        private void OnAccelerometerReadingChanged(object? sender, AccelerometerChangedEventArgs e)
-        {
-            if (!_startedByButton) RotationTimer(e); 
-            else ButtonTimer(e);
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-
-            if (Accelerometer.Default.IsSupported)
-            {
-                Accelerometer.Default.Stop();
-                Accelerometer.Default.ReadingChanged -= OnAccelerometerReadingChanged;
-            }
         }
 
         #endregion
 
         #region Timer
 
-        IDispatcherTimer timer;
-        double seconds = 10;
-
         private void SetupTimer()
         {
             timer = Dispatcher.CreateTimer();
             timer.Interval = TimeSpan.FromMilliseconds(100);
-            timer.Tick += TimerChange;
+            timer.Tick += TimeChanged;
 
             DisableButton(stopButton);
             DisableButton(resetButton);
 
             timeLeftPanel.IsVisible = false;
+            endButton.IsVisible = false;
         }
 
-        private void ContentPageSizeChanged(object sender, EventArgs e)
+        private void TimeChanged(object? sender, EventArgs e)
         {
-            MainGrid.WidthRequest = this.Width;
-            MainGrid.HeightRequest = this.Height;
-        }
+            seconds -= timer.Interval.TotalSeconds;
 
-        private void TimeChanged(object sender, TextChangedEventArgs e)
-        {
-            if(e.NewTextValue.Where(x => !char.IsDigit(x)).Count() > 0)
+            // Sand drops each tick
+            hourglass.TimePassed((waitingTime - seconds) / waitingTime);
+
+            RotatingClock.InvalidateSurface();
+            StartingClock.InvalidateSurface();
+
+            if (seconds <= 0)
             {
-                inputView.Text = e.OldTextValue;
+                TimesUp();
+                timer.Stop();
             }
+            else
+                timeLeftLabel.Text = $"{Math.Ceiling(seconds)} seconds left";
         }
 
-        private void StartTimer(object sender, EventArgs e)
+        private void TimesUp()
         {
+            if (player.IsPlaying) return;
+            timer.Stop();
+
+            Vibration.Vibrate();
+
+
+            player.Loop = true;
+            player.Play();
+
+            endButton.IsVisible = true;
+            timeLeftLabel.Text = "Time's up!";
+
+            if (!_startedByButton)
+            {
+                endButton.IsEnabled = false;
+                endButton.Text = "Rotate device to end";
+                return;
+            }
+
+            endButton.IsEnabled = true;
+            endButton.Text = "Finished!";
+        }
+
+        private void StartTimer(object? sender, EventArgs? e)
+        {
+            _startedByButton = true;
+
             EnableButton(resetButton);
             EnableButton(stopButton);
             DisableButton(startButton);
             inputView.IsEnabled = false;
 
             timeLeftPanel.IsVisible = true;
-            SavedTimers.IsVisible = false;
+            StartingClock.IsVisible = false;
+            endButton.IsVisible = false;
 
-            seconds = int.Parse(inputView.Text);
+            if (int.TryParse(inputView.Text, out int val))
+                seconds = val;
+            else
+                seconds = 10;
+
+            waitingTime = seconds;
             timeLeftLabel.Text = $"{seconds} seconds left";
             timer.Start();
         }
 
-        private void StopTimer(object ?sender, EventArgs ?e)
+        private void StopTimer(object? sender, EventArgs? e)
         {
-
-            if(timer.IsRunning)
+            if (timer.IsRunning)
             {
                 timer.Stop();
                 stopButton.Text = "Resume";
@@ -169,20 +241,38 @@ namespace Klepsydra
 
             timer.Start();
             stopButton.Text = "Stop";
-
         }
 
-        private void ResetTimer(object sender, EventArgs e)
+        private void ResetTimer(object? sender, EventArgs? e)
         {
+            if (_rotation < 190 && _rotation > 170 && !_startedByButton)
+                return;
+            else if (!_startedByButton)
+            {
+                inputHolder.IsVisible = true;
+                MainGrid.RotateTo(0, 5, Easing.Default);
+            }
+
+            cancelButton.IsVisible = false;
+            Vibration.Cancel();
+            player.Stop();
+            _startedByButton = false;
+
             EnableButton(startButton);
             DisableButton(resetButton);
             DisableButton(stopButton);
-            inputView.IsEnabled = true; 
+            inputView.IsEnabled = true;
 
             timeLeftPanel.IsVisible = false;
-            SavedTimers.IsVisible = true;
+            StartingClock.IsVisible = true;
+            RotatingClock.InvalidateSurface();
 
             timer.Stop();
+            hourglass = new Hourglass();
+            StartingClock.InvalidateSurface();
+
+            endButton.IsVisible = false;
+            stopButton.Text = "Stop";
         }
 
         private void DisableButton(Button b)
@@ -199,35 +289,19 @@ namespace Klepsydra
             b.IsVisible = true;
         }
 
-        private void TimerChange(object? sender, EventArgs e)
+        private void ContentPageSizeChanged(object sender, EventArgs e)
         {
-            seconds -= timer.Interval.TotalSeconds;
-            if (seconds <= 0)
-            {
-                DisableButton(stopButton);
-                DisableButton(resetButton);
-                EnableButton(startButton);
-
-                timeLeftLabel.Text = $"0 seconds left";
-                StopTimer(stopButton, new EventArgs());
-
-                Music();
-            }
-            else
-            {
-                timeLeftLabel.Text = $"{Math.Ceiling(seconds)} seconds left";
-            }
+            MainGrid.WidthRequest = this.Width;
+            MainGrid.HeightRequest = this.Height;
         }
 
-        async Task Music()
+        private void InputChanged(object sender, TextChangedEventArgs e)
         {
-            using Stream track = await FileSystem.OpenAppPackageFileAsync("Sound.wav");
-            IAudioPlayer player = audioManager.CreatePlayer(track);
-            player.Loop = true;
-            player.Volume = 1.0;
-            player.Play();
+            if (e.NewTextValue.Where(x => !char.IsDigit(x)).Any())
+            {
+                inputView.Text = e.OldTextValue;
+            }
         }
-
 
         #endregion
     }
