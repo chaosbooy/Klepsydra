@@ -67,12 +67,43 @@ namespace Klepsydra.Resources.Scripts
 
         public void TimePassed(double percentageFallen)
         {
-            while ((float)fallenCount / totalParticles < percentageFallen && fallenCount < totalParticles)
+            int targetFallen = (int)(percentageFallen * totalParticles);
+
+            if (targetFallen > fallenCount)
             {
-                particles[fallenCount].IsFalling = true;
-                fallenCount++;
+                // Forward in time: make more particles fall
+                while (fallenCount < targetFallen && fallenCount < totalParticles)
+                {
+                    particles[fallenCount].IsFalling = true;
+                    fallenCount++;
+                }
+            }
+            else if (targetFallen < fallenCount)
+            {
+                // Rewind time: restore particles back to top
+                while (fallenCount > targetFallen && fallenCount > 0)
+                {
+                    fallenCount--;
+                    particles[fallenCount].IsFalling = false;
+                    ResetParticleToTop(particles[fallenCount]);
+                }
             }
         }
+
+        private void ResetParticleToTop(Particle p)
+        {
+            var rnd = new Random();
+            float y = topOffset + (float)rnd.Next((int)(hourglassHeight / 2));
+            float progress = (y - topOffset) / (hourglassHeight / 2);
+            float xRange = (1 - progress) * (hourglassWidth / 2);
+            float x = leftOffset + progress * hourglassWidth / 2 + (float)rnd.Next((int)(xRange * 2));
+
+            p.X = x;
+            p.Y = y;
+            p.IsFalling = false;
+        }
+
+
 
         public void Draw(SKCanvas canvas, SKImageInfo info)
         {

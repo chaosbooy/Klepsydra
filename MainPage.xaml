@@ -11,11 +11,13 @@
             <RowDefinition Height="3*" />
         </Grid.RowDefinitions>
 
-        <skia:SKCanvasView x:Name="StartingClock"
-                            PaintSurface="OnCanvasViewPaintSurface"
-                           Grid.Row="0"
-                           HorizontalOptions="Fill"
-                           VerticalOptions="Fill"/>
+        <Border Padding="20"  Grid.Row="0">
+            <skia:SKCanvasView x:Name="StartingClock"
+                    PaintSurface="OnCanvasViewPaintSurface"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"/>
+        </Border>
+        
 
         <VerticalStackLayout x:Name="timeLeftPanel"
                      Grid.Row="0"

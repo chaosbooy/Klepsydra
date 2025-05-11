@@ -12,6 +12,8 @@ namespace Klepsydra
         double seconds = 10;
         double waitingTime = 10;
         private IAudioPlayer player;
+        private bool isReversing = false;
+
 
         public MainPage()
         {
@@ -92,28 +94,40 @@ namespace Klepsydra
 
             if (data.Acceleration.Y < -0.8)
             {
-                if (timer.IsRunning) return;
+                // Device upside down — count forward
+                isReversing = false;
 
-                timer.Start();
+                if (!timer.IsRunning)
+                {
+                    timer.Start();
+                }
+
                 cancelButton.IsVisible = false;
                 inputHolder.IsVisible = false;
                 MainGrid.RotateTo(180, 5, Easing.Default);
             }
             else if (data.Acceleration.Y > 0.8)
             {
-                if (player.IsPlaying)
+                // Device upright — reverse time
+                if (seconds >= waitingTime)
                 {
+                    // Reset if back to start
                     ResetTimer(null, null);
                     return;
                 }
 
-                if (!timer.IsRunning) return;
+                isReversing = true;
 
-                timer.Stop();
+                if (!timer.IsRunning)
+                {
+                    timer.Start();
+                }
+
                 cancelButton.IsVisible = true;
                 MainGrid.RotateTo(0, 5, Easing.Default);
             }
         }
+
 
         private void ButtonTimer(AccelerometerChangedEventArgs e)
         {
@@ -165,31 +179,43 @@ namespace Klepsydra
 
         private void TimeChanged(object? sender, EventArgs e)
         {
-            seconds -= timer.Interval.TotalSeconds;
+            if (!isReversing)
+            {
+                seconds -= timer.Interval.TotalSeconds;
 
-            // Sand drops each tick
-            hourglass.TimePassed((waitingTime - seconds) / waitingTime);
+                if (seconds <= 0)
+                {
+                    TimesUp();
+                    timer.Stop();
+                }
+            }
+            else
+            {
+                seconds += timer.Interval.TotalSeconds;
+
+                if (seconds >= waitingTime)
+                {
+                    seconds = waitingTime;
+                    timer.Stop();
+                }
+            }
+
+            double progress = (waitingTime - seconds) / waitingTime;
+            hourglass.TimePassed(progress);
 
             RotatingClock.InvalidateSurface();
             StartingClock.InvalidateSurface();
 
-            if (seconds <= 0)
-            {
-                TimesUp();
-                timer.Stop();
-            }
-            else
-                timeLeftLabel.Text = $"{Math.Ceiling(seconds)} seconds left";
+            timeLeftLabel.Text = $"{Math.Ceiling(seconds)} seconds left";
         }
+
 
         private void TimesUp()
         {
-            if (player.IsPlaying) return;
+            if (player.IsPlaying || isReversing) return;
             timer.Stop();
 
             Vibration.Vibrate();
-
-
             player.Loop = true;
             player.Play();
 
@@ -206,6 +232,7 @@ namespace Klepsydra
             endButton.IsEnabled = true;
             endButton.Text = "Finished!";
         }
+
 
         private void StartTimer(object? sender, EventArgs? e)
         {
