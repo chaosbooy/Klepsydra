@@ -104,7 +104,7 @@ namespace Klepsydra
 
                 cancelButton.IsVisible = false;
                 inputHolder.IsVisible = false;
-                MainGrid.RotateTo(180, 5, Easing.Default);
+                RotationB.RotateTo(180, 5, Easing.Default);
             }
             else if (data.Acceleration.Y > 0.8)
             {
@@ -124,7 +124,6 @@ namespace Klepsydra
                 }
 
                 cancelButton.IsVisible = true;
-                MainGrid.RotateTo(0, 5, Easing.Default);
             }
         }
 
@@ -277,7 +276,7 @@ namespace Klepsydra
             else if (!_startedByButton)
             {
                 inputHolder.IsVisible = true;
-                MainGrid.RotateTo(0, 5, Easing.Default);
+                RotationB.RotateTo(0, 5, Easing.Default);
             }
 
             cancelButton.IsVisible = false;

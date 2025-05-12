@@ -11,7 +11,7 @@
             <RowDefinition Height="3*" />
         </Grid.RowDefinitions>
 
-        <Border Padding="20"  Grid.Row="0">
+        <Border x:Name="RotationB" Padding="20"  Grid.Row="0">
             <skia:SKCanvasView x:Name="StartingClock"
                     PaintSurface="OnCanvasViewPaintSurface"
                    HorizontalOptions="Fill"
